@@ -44,6 +44,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
         {
             CFGLEngine.start()
             engineStarted = true
+            OpenGLActivity.running = true
 
             CFGLPhysicsController.start()
         }

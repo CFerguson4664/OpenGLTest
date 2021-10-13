@@ -1,6 +1,7 @@
 package com.example.opengltest
 
 import android.content.Intent
+import android.graphics.Path
 import android.hardware.SensorManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -24,6 +25,8 @@ class OpenGLActivity: AppCompatActivity() {
     lateinit var tv : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d("OnCreate","OnCreate Called")
+
         super.onCreate(savedInstanceState)
 
         window.decorView.setSystemUiVisibility(
@@ -57,7 +60,6 @@ class OpenGLActivity: AppCompatActivity() {
             CFGLPhysicsController.stop()
             val intent = Intent(this, MainMenu::class.java)
             startActivity(intent)
-            this@OpenGLActivity.finish()
         }
         menu.textSize = 36f
 
@@ -77,5 +79,25 @@ class OpenGLActivity: AppCompatActivity() {
         this.runOnUiThread {
             tv.text = inText
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        CFGLView.onPause()
+    }
+
+    override fun onResume() {
+        Log.d("OnCreate","GLView Resumed")
+        super.onResume()
+        CFGLView.onResume()
+
+        if(running){
+            CFGLEngine.resetGame()
+            CFGLPhysicsController.start()
+        }
+    }
+
+    companion object {
+        var running = false
     }
 }

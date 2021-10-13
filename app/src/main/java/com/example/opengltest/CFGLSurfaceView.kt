@@ -10,13 +10,13 @@ class CFGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
     init {
         // Create an OpenGL ES 2.0 context
-        setEGLContextClientVersion(2)
+        this.setEGLContextClientVersion(2)
+        this.preserveEGLContextOnPause = true
 
         renderer = CFGLRenderer()
 
         // Set the Renderer for drawing on the GLSurfaceView
-        setRenderer(renderer)
-        this.preserveEGLContextOnPause = true
+        this.setRenderer(renderer)
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {

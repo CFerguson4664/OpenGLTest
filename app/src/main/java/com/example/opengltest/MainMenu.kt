@@ -30,14 +30,22 @@ class MainMenu : AppCompatActivity() {
 
         val button_start = findViewById<Button>(R.id.button_start_game)
         button_start.setOnClickListener {
-            this@MainMenu.finish()
 
-            val intent = Intent(this, OpenGLActivity::class.java)
-            startActivity(intent)
+            if(!OpenGLActivity.running)
+            {
+                val intent = Intent(this, OpenGLActivity::class.java)
+                startActivity(intent)
+            }
+
+            this@MainMenu.finish()
         }
 
         val button_quit = findViewById<Button>(R.id.button_quit_game)
         button_quit.setOnClickListener {
+            if(OpenGLActivity.running) {
+                CFGLActivity.finish()
+            }
+
             this@MainMenu.finish()
             exitProcess(0)
         }

@@ -20,6 +20,7 @@ class CFGLEngine {
         var score = 0f
 
         fun start() {
+            Log.d("OnCreate","Engine Started")
             CFGLPhysicsController.useGyro()
 
             val bg1 = Vector2(-1f,-3f)
@@ -150,26 +151,7 @@ class CFGLEngine {
 
                     if(died)
                     {
-                        for(obstacle in obstacles)
-                        {
-                            obToRemove.add(obstacle)
-                            CFGLCanvas.remove(obstacle)
-                        }
-
-                        while(!obToRemove.isEmpty())
-                        {
-                            obstacles.remove(obToRemove.poll())
-                        }
-
-                        distanceBetweenObstacles = 1.5f
-                        moveSpeedScalar = 1f
-                        halt = false
-
-                        val obstacle = LevelEngine.genObstacle()
-                        obstacles.add(obstacle)
-                        CFGLCanvas.add(obstacle)
-                        lastObstacle = obstacle
-                        score = 0f
+                        resetGame()
                     }
                     else {
                         halt = !halt
@@ -184,6 +166,30 @@ class CFGLEngine {
 
                 }
             }
+        }
+
+        fun resetGame() {
+            for(obstacle in obstacles)
+            {
+                obToRemove.add(obstacle)
+                CFGLCanvas.remove(obstacle)
+            }
+
+            while(!obToRemove.isEmpty())
+            {
+                obstacles.remove(obToRemove.poll())
+            }
+
+            distanceBetweenObstacles = 1.5f
+            moveSpeedScalar = 1f
+            halt = false
+
+            val obstacle = LevelEngine.genObstacle()
+            obstacles.add(obstacle)
+            CFGLCanvas.add(obstacle)
+            lastObstacle = obstacle
+            score = 0f
+            died = false
         }
     }
 }
