@@ -11,14 +11,10 @@ class LevelEngine {
         var lastObstacle = 2;
         var txt = loadTexture(R.drawable.whitesquare)
 
-        var colors : List<Color4> = listOf(
-            Color4(1.0f,1.0f,1.0f,1.0f),
-            Color4(1.0f,0.0f,0.0f,1.0f),
-            Color4(0.0f,1.0f,0.0f,1.0f),
-            Color4(0.0f,0.0f,1.0f,1.0f),
-            Color4(0.5f,1.0f,1.0f,1.0f),
-            Color4(1.0f,0.5f,1.0f,1.0f),
-            Color4(1.0f,1.0f,0.5f,1.0f)
+        var textures : List<Int> = listOf(
+            loadTexture(R.drawable.asteroid_small),
+            loadTexture(R.drawable.asteroid_medium),
+            loadTexture(R.drawable.asteroid_big)
         )
 
         fun genObstacle() : Group{
@@ -30,9 +26,10 @@ class LevelEngine {
             for(i in 0 until 6) {
                 if(layout.layout[i])
                 {
-                    val randColor = (0 until colors.size - 1).random()
-                    var rect = Rectangle(Vector2(0.3f,0.3f).correctAspect(),  colors[randColor])
+                    val randTexture = (0 until textures.size).random()
+                    var rect = Rectangle(Vector2(0.3f,0.3f).correctAspect(),  textures[randTexture])
                     rect.moveTo(Vector2(-0.75f + (0.3f * i), 1.5f))
+                    rect.asteroidType = randTexture
 
                     group.shapes.add(rect)
                 }

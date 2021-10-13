@@ -3,7 +3,9 @@ package com.example.opengltest
 import android.util.Log
 import android.view.MotionEvent
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 class CFGLEngine {
     companion object {
@@ -28,7 +30,7 @@ class CFGLEngine {
             val bg3 = Vector2(1f,1f)
             val bg4 = Vector2(1f,-3f)
 
-            val background = loadTexture(R.drawable.backgroundtest)
+            val background = loadTexture(R.drawable.backgroundspace)
 
             backRect = Rectangle(bg1, bg2, bg3, bg4, Color4(1f,1f,1f,1f), background)
 
@@ -106,7 +108,7 @@ class CFGLEngine {
                     {
                         for(shape in obstacle.shapes)
                         {
-                            if(shape.getBounds().contains(rect.getPos()))
+                            if(checkCollision(shape,rect))
                             {
                                 halt = true
                                 died = true
@@ -126,13 +128,13 @@ class CFGLEngine {
                     obstacles.remove(obToRemove.poll())
                 }
 
-                if(distanceBetweenObstacles > 0.3f)
+                if(distanceBetweenObstacles / CFGLAspect > 0.65f)
                 {
-                    distanceBetweenObstacles -= (deltaTime / 100f)
+                    distanceBetweenObstacles -= (deltaTime / 70f) / CFGLAspect
                 }
                 else
                 {
-                    moveSpeedScalar += (deltaTime / 50f)
+                    moveSpeedScalar += (deltaTime / 40f)
                 }
 
                 if(1.5f - lastObstacle.getPos().y > distanceBetweenObstacles)
@@ -191,5 +193,22 @@ class CFGLEngine {
             score = 0f
             died = false
         }
+
+        fun checkCollision(obstacle : Shape, player : Shape) : Boolean {
+            var minDist =  collisionDistance[obstacle.asteroidType] + 0.1f;
+            var playerPos = player.getPos()
+            var obsPos = obstacle.getPos()
+
+            var offset = Vector2(abs(obsPos.x - playerPos.x),abs(obsPos.y - playerPos.y) / CFGLAspect)
+
+            var dist = sqrt(offset.x.toDouble().pow(2) + offset.y.toDouble().pow(2))
+            return (dist < minDist)
+        }
+
+        var collisionDistance : List<Float> = listOf(
+            0.035f,
+            0.082f,
+            0.082f
+        )
     }
 }

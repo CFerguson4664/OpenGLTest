@@ -1,6 +1,7 @@
 package com.example.opengltest
 
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Path
 import android.hardware.SensorManager
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,7 @@ class OpenGLActivity: AppCompatActivity() {
                 View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         )
 
+
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
         CFGLView = CFGLSurfaceView(this)
@@ -45,8 +47,9 @@ class OpenGLActivity: AppCompatActivity() {
             RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.addRule(RelativeLayout.ALIGN_TOP)
         tv = TextView(this)
+        tv.setTextColor(Color.WHITE)
         tv.layoutParams = lp
-        tv.textSize = 48f
+        tv.textSize = 36f
         tv.text = " Score: 0"
         tv.setBackgroundColor(0x0060ff00)
         rl.addView(tv)
@@ -61,7 +64,7 @@ class OpenGLActivity: AppCompatActivity() {
             val intent = Intent(this, MainMenu::class.java)
             startActivity(intent)
         }
-        menu.textSize = 36f
+        menu.textSize = 28f
 
         val lp2: RelativeLayout.LayoutParams =
             RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -84,6 +87,10 @@ class OpenGLActivity: AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         CFGLView.onPause()
+
+        if(running) {
+            CFGLPhysicsController.stop()
+        }
     }
 
     override fun onResume() {
@@ -95,6 +102,11 @@ class OpenGLActivity: AppCompatActivity() {
             CFGLEngine.resetGame()
             CFGLPhysicsController.start()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        running = false
     }
 
     companion object {

@@ -142,6 +142,7 @@ abstract class Shape(var color: Color4) : Graphic() {
     abstract fun getPos() : Vector2
     abstract fun wind() : FloatArray
     abstract fun getBounds() : Bounds
+    var asteroidType = 0
 
     var vertexBufferValid : Boolean = false
     lateinit var vertexBuffer : FloatBuffer
