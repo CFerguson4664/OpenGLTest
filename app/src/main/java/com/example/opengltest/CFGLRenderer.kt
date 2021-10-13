@@ -8,50 +8,18 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlinx.coroutines.*
+import kotlin.concurrent.withLock
 
 var CFGLWidth : Int = 0
 var CFGLHeight : Int = 0
 var CFGLAspect : Float = 0.0f
 var CFGLCanvas : Canvas = Canvas()
 
-class UpdateViewModel(): ViewModel() {
-    fun update() {
-        // Create a new coroutine to move the execution off the UI thread
-        GlobalScope.launch(newSingleThreadContext("Update")) {
-
-            var startTime = System.currentTimeMillis()
-            while (true) {
-                val FRAME_TIME = 5
-                val endTime = System.currentTimeMillis()
-                val dt = endTime - startTime
-                if (dt < FRAME_TIME) {
-                    delay(FRAME_TIME - dt)
-                }
-                startTime = endTime
-
-
-                CFGLEngine.update(dt / 1000f)
-            }
-        }
-    }
-}
 
 class CFGLRenderer : GLSurfaceView.Renderer {
     private var engineStarted : Boolean = false
-    var startTime = System.currentTimeMillis()
-    var indicator : Rectangle
-
-    init {
-        val pt1 = Vector2(0.9f,0.9f)
-        val pt2 = Vector2(0.9f, 1.0f)
-        val pt3 = Vector2(1.0f, 1.0f)
-        val pt4 = Vector2(1.0f, 0.9f)
-        indicator = Rectangle(pt1, pt2, pt3, pt4, Color4(1.0f,0f,0f,1.0f))
-    }
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
@@ -61,8 +29,8 @@ class CFGLRenderer : GLSurfaceView.Renderer {
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
+        CFGLCanvas.modify()
         CFGLCanvas.draw()
-        CFGLView.requestRender()
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
@@ -77,8 +45,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             CFGLEngine.start()
             engineStarted = true
 
-            var updateThread = UpdateViewModel()
-            updateThread.update()
+            CFGLPhysicsController.start()
         }
     }
 
@@ -90,8 +57,11 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             val mProgram = ShapeShader.getProgram()
             var mPositionHandle: Int = 0
             var mColorHandle : Int = 0
+            lateinit var vertexCoords : FloatArray
 
-            val vertexCoords = shape.wind()
+            shape.lock.withLock {
+                 vertexCoords = shape.wind()
+            }
 
             val vertexCount: Int = vertexCoords.size / COORDS_PER_VERTEX
             val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
@@ -137,14 +107,18 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             GLES20.glDisableVertexAttribArray(mPositionHandle)
         }
 
-        fun texDrawObj(shape: Shape, texture : Int) {
+        fun texDrawObj(shape: Shape, frame : Frame) {
             val mProgram = TexShapeShader.getProgram()
             var mPositionHandle: Int = 0
             var mTextureCoordinateHandle: Int = 0
             var mTextureUniformHandle : Int = 0
             var mColorHandle : Int = 0
 
-            val vertexCoords = shape.wind()
+            lateinit var vertexCoords : FloatArray
+
+            shape.lock.withLock {
+                vertexCoords = shape.wind()
+            }
 
             val vertexCount: Int = vertexCoords.size / COORDS_PER_VERTEX
             val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
@@ -222,12 +196,12 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             // Get handle to shader's vColor member
             mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor")
             // Set color for drawing the shape
-            GLES20.glUniform4fv(mColorHandle, 1, shape.color.getColor(), 0)
+            GLES20.glUniform4fv(mColorHandle, 1, frame.color.getColor(), 0)
 
             // Set the active texture unit to texture unit 0.
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
             // Bind the texture to this unit.
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, frame.texture)
 
             // Get handle to shader's u_Texture member
             mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "u_Texture")

@@ -19,9 +19,15 @@ class Color4(var r: Float, var g: Float, var b: Float, var a: Float) {
     }
 }
 
+class Frame(var texture : Int, var color : Color4)
+{
+
+}
+
+
 class Bounds(var maxX : Float, var minX : Float, var maxY : Float, var minY : Float) {
 
-    constructor(start : Vector2) : this(start.x, start.y, start.x, start.y)
+    constructor(start : Vector2) : this(start.x, start.x, start.y, start.y)
 
     fun compare(pt : Vector2) {
         if(pt.x > maxX) {
@@ -45,5 +51,9 @@ class Bounds(var maxX : Float, var minX : Float, var maxY : Float, var minY : Fl
 
     fun height() : Float {
         return maxY - minY
+    }
+
+    fun contains(pt : Vector2) : Boolean {
+        return (pt.x > minX && pt.x < maxX && pt.y > minY && pt.y < maxY)
     }
 }

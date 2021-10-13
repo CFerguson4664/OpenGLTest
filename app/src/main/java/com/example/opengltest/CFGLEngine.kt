@@ -1,33 +1,26 @@
 package com.example.opengltest
 
+import android.util.Log
 import android.view.MotionEvent
+import java.util.*
 import kotlin.math.pow
 
 class CFGLEngine {
     companion object {
         lateinit var rect : Rectangle
-        lateinit var rect2 : Rectangle
         lateinit var backRect: Rectangle
+        var obstacles : MutableList<Group> = emptyList<Group>().toMutableList()
+        var obToRemove : Queue<Group> = LinkedList()
 
-        lateinit var tri : Triangle
-        var directionRight : Boolean = true
+        lateinit var lastObstacle : Group
+        var distanceBetweenObstacles = 1.5f
+        var moveSpeedScalar = 1.0f
+        var halt = false
+        var died = false
+        var score = 0f
 
         fun start() {
-            val pt1 = Vector2(-0.15f,-0.15f).correctAspect()
-            val pt2 = Vector2(-0.15f, 0.15f).correctAspect()
-            val pt3 = Vector2(0.15f, 0.15f).correctAspect()
-            val pt4 = Vector2(0.15f, -0.15f).correctAspect()
-
-            val pt12 = Vector2(-0.9f,-0.3f).correctAspect()
-            val pt22 = Vector2(-0.9f, 0.3f).correctAspect()
-            val pt32 = Vector2(-0.6f, 0.3f).correctAspect()
-            val pt42 = Vector2(-0.6f, -0.3f).correctAspect()
-
-            val pt5 = Vector2(0.0f, -0.3f).correctAspect()
-
-            val textureHandle = loadTexture(R.drawable.pikachu)
-            val textureHandle2 = loadTexture(R.drawable.shrek)
-
+            CFGLPhysicsController.useGyro()
 
             val bg1 = Vector2(-1f,-3f)
             val bg2 = Vector2(-1f,1f)
@@ -38,71 +31,149 @@ class CFGLEngine {
 
             backRect = Rectangle(bg1, bg2, bg3, bg4, Color4(1f,1f,1f,1f), background)
 
+            CFGLCanvas.add(backRect)
+
+
+
+            // Object Creation example
+            // First load the textures
             val frame1 = loadTexture(R.drawable.pixil_frame_1)
-            val frame2 = loadTexture(R.drawable.pixil_frame_0)
             val frame3 = loadTexture(R.drawable.pixil_frame_4)
 
+            // Then load them into an animation if needed
             var anim = Animation()
             anim.keyframes.add(frame1)
-            //anim.keyframes.add(frame2)
             anim.keyframes.add(frame3)
             anim.FRAMES_PER_KEYFRAME = 30
 
+            // Then create the rectand and give it the animation or texture
+            rect = Rectangle(Vector2(0.3f, 0.3f).correctAspect(),frame3)
 
-            // With texture
-            rect2 = Rectangle(pt12, pt22, pt32, pt42, Color4(1.0f, 1.0f, 1.0f, 1.0f), textureHandle2)
-            rect = Rectangle(pt1, pt2, pt3, pt4, Color4(1.0f,1.0f,1.0f,1.0f), anim)
-            //tri = Triangle(pt5, pt2, pt3, Color4(1.0f,1.0f,1.0f,1.0f), textureHandle)
+            // Then move it to its starting position
+            rect.moveTo(Vector2(0f,-0.8f))
 
-            // Without texture
-            //rect = Rectangle(pt1, pt2, pt3, pt4, Color4(1.0f,1.0f,1.0f,1.0f))
-            tri = Triangle(pt5, pt2, pt3, Color4(0.0f,1.0f,1.0f,0.3f))
+            // And add the object to the canvas
+            CFGLCanvas.add(rect)
 
-
-            CFGLCanvas.graphics.add(backRect)
-            CFGLCanvas.graphics.add(rect2)
-            CFGLCanvas.graphics.add(tri)
-            CFGLCanvas.graphics.add(rect)
+            val obstacle = LevelEngine.genObstacle()
+            obstacles.add(obstacle)
+            CFGLCanvas.add(obstacle)
+            lastObstacle = obstacle
         }
 
-        fun update(deltaTime : Float) {
-            backRect.move(Vector2(0.0f,-0.5f * deltaTime).correctAspect())
+        fun update(deltaTime : Float, gyroData : Vector2) {
 
-            if(backRect.getPos().y <= -1)
+            if(!halt)
             {
-                backRect.moveTo(Vector2(0.0f,1f))
-            }
+                backRect.move(Vector2(0.0f,-0.25f * deltaTime).correctAspect())
 
-
-            if(directionRight and (rect.getPos().x < 1f))
-            {
-                rect.move(Vector2(2f * deltaTime,0f))
-
-                if(rect.getPos().x > 1f)
+                if(backRect.getPos().y <= -1)
                 {
-                    rect.moveTo(Vector2(1f, rect.getPos().y))
+                    backRect.moveTo(Vector2(0.0f,1f))
+                }
+
+                rect.move(Vector2(gyroData.x * deltaTime * 0.7f * moveSpeedScalar, (gyroData.y + 0.0f) * deltaTime * 0.7f * moveSpeedScalar).correctAspect())
+                if(rect.getPos().x > 0.85f)
+                {
+                    rect.moveTo(Vector2(0.85f, rect.getPos().y))
+                }
+
+                if(rect.getPos().x < -0.85f)
+                {
+                    rect.moveTo(Vector2(-0.85f, rect.getPos().y))
+                }
+
+                if(rect.getPos().y > 0.9f)
+                {
+                    rect.moveTo(Vector2(rect.getPos().x, 0.9f))
+                }
+
+                if(rect.getPos().y < -0.9f)
+                {
+                    rect.moveTo(Vector2(rect.getPos().x, -0.9f))
+                }
+
+                for(obstacle in obstacles)
+                {
+                    obstacle.move(Vector2(0.0f,-0.5f * deltaTime * moveSpeedScalar).correctAspect())
+                    if(obstacle.getPos().y < -1.5f)
+                    {
+                        CFGLCanvas.remove(obstacle)
+                        obToRemove.add(obstacle)
+                    }
+                    else
+                    {
+                        for(shape in obstacle.shapes)
+                        {
+                            if(shape.getBounds().contains(rect.getPos()))
+                            {
+                                halt = true
+                                died = true
+                            }
+                        }
+                    }
+                }
+
+                score += deltaTime * 10
+                CFGLActivity.updateText(" Score: " + score.toInt())
+
+
+
+
+                while(!obToRemove.isEmpty())
+                {
+                    obstacles.remove(obToRemove.poll())
+                }
+
+                if(distanceBetweenObstacles > 0.3f)
+                {
+                    distanceBetweenObstacles -= (deltaTime / 100f)
+                }
+                else
+                {
+                    moveSpeedScalar += (deltaTime / 50f)
+                }
+
+                if(1.5f - lastObstacle.getPos().y > distanceBetweenObstacles)
+                {
+                    val obstacle = LevelEngine.genObstacle()
+                    lastObstacle = obstacle
+                    obstacles.add(obstacle)
+                    CFGLCanvas.add(obstacle)
                 }
             }
-            else if (!directionRight and (rect.getPos().x > -1f))
-            {
-                rect.move(Vector2(-2f * deltaTime,0f))
-
-                if(rect.getPos().x < -1f)
-                {
-                    rect.moveTo(Vector2(-1f, rect.getPos().y))
-                }
-            }
-
-            val const = 0.3f
-            val y = ((0.5f) - ((rect.getPos().x).pow(2.0f)  * const))
-
-            rect.moveTo(Vector2(rect.getPos().x, y) )
         }
 
         fun onTouch(e : MotionEvent) {
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    directionRight = !directionRight
+
+                    if(died)
+                    {
+                        for(obstacle in obstacles)
+                        {
+                            obToRemove.add(obstacle)
+                            CFGLCanvas.remove(obstacle)
+                        }
+
+                        while(!obToRemove.isEmpty())
+                        {
+                            obstacles.remove(obToRemove.poll())
+                        }
+
+                        distanceBetweenObstacles = 1.5f
+                        moveSpeedScalar = 1f
+                        halt = false
+
+                        val obstacle = LevelEngine.genObstacle()
+                        obstacles.add(obstacle)
+                        CFGLCanvas.add(obstacle)
+                        lastObstacle = obstacle
+                        score = 0f
+                    }
+                    else {
+                        halt = !halt
+                    }
                 }
 
                 MotionEvent.ACTION_MOVE -> {

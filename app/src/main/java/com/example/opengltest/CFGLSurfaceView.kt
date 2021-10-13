@@ -3,6 +3,7 @@ package com.example.opengltest
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.view.MotionEvent
+import android.widget.TextView
 
 class CFGLSurfaceView(context: Context) : GLSurfaceView(context) {
     private val renderer: CFGLRenderer
@@ -15,8 +16,7 @@ class CFGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
-
-        renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        this.preserveEGLContextOnPause = true
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
@@ -24,5 +24,9 @@ class CFGLSurfaceView(context: Context) : GLSurfaceView(context) {
         CFGLEngine.onTouch(e)
 
         return true
+    }
+
+    fun close() {
+        CFGLPhysicsController.stop()
     }
 }
