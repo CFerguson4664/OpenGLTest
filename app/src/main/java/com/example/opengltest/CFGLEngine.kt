@@ -2,6 +2,7 @@ package com.example.opengltest
 
 import android.util.Log
 import android.view.MotionEvent
+import android.view.View
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.pow

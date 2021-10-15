@@ -25,8 +25,4 @@ class CFGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
         return true
     }
-
-    fun close() {
-        CFGLPhysicsController.stop()
-    }
 }

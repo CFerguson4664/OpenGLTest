@@ -15,9 +15,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 import android.widget.TextView
 
-
-
-
 lateinit var CFGLView : CFGLSurfaceView
 lateinit var CFGLGyro : SensorManager
 lateinit var CFGLActivity : OpenGLActivity
@@ -30,10 +27,7 @@ class OpenGLActivity: AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        window.decorView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_IMMERSIVE or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-        )
+
 
 
         // Create a GLSurfaceView instance and set it
@@ -72,6 +66,20 @@ class OpenGLActivity: AppCompatActivity() {
         menu.layoutParams = lp2
         rl.addView(menu)
 
+        var zero = Button(this)
+        zero.text = "Zero"
+        zero.setOnClickListener {
+            CFGLPhysicsController.setGyroZero(CFGLPhysicsController.gyroPos.y)
+        }
+        zero.textSize = 28f
+
+        val lp3: RelativeLayout.LayoutParams =
+            RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        lp3.setMargins(0,150,0,0,)
+        lp3.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+        zero.layoutParams = lp3
+        rl.addView(zero)
+
 
         CFGLGyro = getSystemService(SENSOR_SERVICE) as SensorManager
 
@@ -97,6 +105,11 @@ class OpenGLActivity: AppCompatActivity() {
         Log.d("OnCreate","GLView Resumed")
         super.onResume()
         CFGLView.onResume()
+
+        window.decorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_IMMERSIVE or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        )
 
         if(running){
             CFGLEngine.resetGame()
