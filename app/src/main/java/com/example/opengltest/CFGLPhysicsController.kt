@@ -76,6 +76,5 @@ class CFGLPhysicsController(): ViewModel() {
         fun setGyroZero(zero : Float) {
             gyro.setZero()
         }
-
     }
 }

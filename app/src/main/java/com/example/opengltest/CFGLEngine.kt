@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 
 class CFGLEngine {
     companion object {
-        lateinit var rect : Rectangle
+        lateinit var player : Rectangle
         lateinit var backRect: Rectangle
         var obstacles : MutableList<Group> = emptyList<Group>().toMutableList()
         var obToRemove : Queue<Group> = LinkedList()
@@ -20,7 +20,12 @@ class CFGLEngine {
         var moveSpeedScalar = 1.0f
         var halt = false
         var died = false
+        var disableTap = false
         var score = 0f
+
+        lateinit var left : Animation
+        lateinit var right : Animation
+        lateinit var center : Animation
 
         fun start() {
             Log.d("OnCreate","Engine Started")
@@ -41,24 +46,48 @@ class CFGLEngine {
 
             // Object Creation example
             // First load the textures
-            val frame1 = loadTexture(R.drawable.pixil_frame_1)
-            val frame3 = loadTexture(R.drawable.pixil_frame_4)
+            center = Animation()
+            center.FRAMES_PER_KEYFRAME = 20
+            val centerNo = loadTexture(R.drawable.ship_default_noboost)
+            val centerSmall = loadTexture(R.drawable.ship_default_small_boost)
+            val centerBig = loadTexture(R.drawable.ship_default_big_boost)
+            center.keyframes.add(centerNo)   //Add frames in the order they should be displayed
+            center.keyframes.add(centerSmall)
+            center.keyframes.add(centerBig)
+            center.keyframes.add(centerSmall)
 
-            // Then load them into an animation if needed
-            var anim = Animation()
-            anim.keyframes.add(frame1)
-            anim.keyframes.add(frame3)
-            anim.FRAMES_PER_KEYFRAME = 30
+            right = Animation()
+            right.FRAMES_PER_KEYFRAME = 20
+            val rightNo = loadTexture(R.drawable.ship_right_noboost)
+            val rightSmall = loadTexture(R.drawable.ship_right_small_boost)
+            val rightBig = loadTexture(R.drawable.ship_right_big_boost)
+            right.keyframes.add(rightNo)   //Add frames in the order they should be displayed
+            right.keyframes.add(rightSmall)
+            right.keyframes.add(rightBig)
+            right.keyframes.add(rightSmall)
 
-            // Then create the rectand and give it the animation or texture
-            rect = Rectangle(Vector2(0.3f, 0.3f).correctAspect(),frame3)
+            left = Animation()
+            left.FRAMES_PER_KEYFRAME = 20
+            val leftNo = loadTexture(R.drawable.ship_left_no_boost)
+            val leftSmall = loadTexture(R.drawable.ship_left_little_boost)
+            val leftBig = loadTexture(R.drawable.ship_left_big_boost)
+            left.keyframes.add(leftNo)   //Add frames in the order they should be displayed
+            left.keyframes.add(leftSmall)
+            left.keyframes.add(leftBig)
+            left.keyframes.add(leftSmall)
+
+
+            // Then create the rectangle and give it the animation or texture
+            player = Rectangle(Vector2(0.25f, 0.25f).correctAspect(),center)
 
             // Then move it to its starting position
-            rect.moveTo(Vector2(0f,-0.8f))
+            player.moveTo(Vector2(0f,-0.8f))
 
             // And add the object to the canvas
-            CFGLCanvas.add(rect)
+            CFGLCanvas.add(player)
 
+
+            // Create the initial obstacle
             val obstacle = LevelEngine.genObstacle()
             obstacles.add(obstacle)
             CFGLCanvas.add(obstacle)
@@ -76,25 +105,60 @@ class CFGLEngine {
                     backRect.moveTo(Vector2(0.0f,1f))
                 }
 
-                rect.move(Vector2(gyroData.x * deltaTime * 0.7f * moveSpeedScalar, (gyroData.y + 0.0f) * deltaTime * 0.7f * moveSpeedScalar).correctAspect())
-                if(rect.getPos().x > 0.85f)
+                val horizMove = gyroData.x * deltaTime * 0.7f * moveSpeedScalar
+                val vertMove = (gyroData.y + 0.0f) * deltaTime * 0.7f * moveSpeedScalar
+
+                player.move(Vector2(horizMove,vertMove).correctAspect())
+
+                if(horizMove > 0.25 * deltaTime)
                 {
-                    rect.moveTo(Vector2(0.85f, rect.getPos().y))
+                    val current = player.getAnimation()
+                    if(current != right)
+                    {
+                        right.currentFrame = current.currentFrame
+                        right.framesOnKeyframe = current.framesOnKeyframe
+                        player.setAnimation(right)
+                    }
+                }
+                else if(horizMove < -0.25 * deltaTime)
+                {
+                    val current = player.getAnimation()
+                    if(current != left)
+                    {
+                        left.currentFrame = current.currentFrame
+                        left.framesOnKeyframe = current.framesOnKeyframe
+                        player.setAnimation(left)
+                    }
+                }
+                else {
+                    val current = player.getAnimation()
+                    if(current != center)
+                    {
+                        center.currentFrame = current.currentFrame
+                        center.framesOnKeyframe = current.framesOnKeyframe
+                        player.setAnimation(center)
+                    }
                 }
 
-                if(rect.getPos().x < -0.85f)
+
+                if(player.getPos().x > 0.85f)
                 {
-                    rect.moveTo(Vector2(-0.85f, rect.getPos().y))
+                    player.moveTo(Vector2(0.85f, player.getPos().y))
                 }
 
-                if(rect.getPos().y > 0.9f)
+                if(player.getPos().x < -0.85f)
                 {
-                    rect.moveTo(Vector2(rect.getPos().x, 0.9f))
+                    player.moveTo(Vector2(-0.85f, player.getPos().y))
                 }
 
-                if(rect.getPos().y < -0.9f)
+                if(player.getPos().y > 0.9f)
                 {
-                    rect.moveTo(Vector2(rect.getPos().x, -0.9f))
+                    player.moveTo(Vector2(player.getPos().x, 0.9f))
+                }
+
+                if(player.getPos().y < -0.9f)
+                {
+                    player.moveTo(Vector2(player.getPos().x, -0.9f))
                 }
 
                 for(obstacle in obstacles)
@@ -109,7 +173,7 @@ class CFGLEngine {
                     {
                         for(shape in obstacle.shapes)
                         {
-                            if(checkCollision(shape,rect))
+                            if(checkCollision(shape,player))
                             {
                                 halt = true
                                 died = true
@@ -120,9 +184,6 @@ class CFGLEngine {
 
                 score += deltaTime * 10
                 CFGLActivity.updateText(" Score: " + score.toInt())
-
-
-
 
                 while(!obToRemove.isEmpty())
                 {
@@ -149,24 +210,28 @@ class CFGLEngine {
         }
 
         fun onTouch(e : MotionEvent) {
-            when (e.action) {
-                MotionEvent.ACTION_DOWN -> {
+            if(!disableTap)
+            {
+                when (e.action) {
+                    MotionEvent.ACTION_DOWN -> {
 
-                    if(died)
-                    {
-                        resetGame()
+                        if(died)
+                        {
+                            resetGame()
+                        }
+                        else {
+                            halt = !halt
+                            CFGLActivity.togglePause()
+                        }
                     }
-                    else {
-                        halt = !halt
+
+                    MotionEvent.ACTION_MOVE -> {
+
                     }
-                }
 
-                MotionEvent.ACTION_MOVE -> {
+                    MotionEvent.ACTION_UP -> {
 
-                }
-
-                MotionEvent.ACTION_UP -> {
-
+                    }
                 }
             }
         }

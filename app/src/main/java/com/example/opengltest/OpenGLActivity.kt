@@ -1,5 +1,6 @@
 package com.example.opengltest
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Path
@@ -11,17 +12,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RelativeLayout
-import kotlinx.android.synthetic.main.activity_main.*
 
 import android.widget.TextView
+import android.os.Build
+
+import android.view.LayoutInflater
+import androidx.annotation.RequiresApi
+
 
 lateinit var CFGLView : CFGLSurfaceView
 lateinit var CFGLGyro : SensorManager
 lateinit var CFGLActivity : OpenGLActivity
 
 class OpenGLActivity: AppCompatActivity() {
-    lateinit var tv : TextView
+    var paused = false
+    var reset = false
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("OnCreate","OnCreate Called")
 
@@ -33,52 +40,18 @@ class OpenGLActivity: AppCompatActivity() {
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
         CFGLView = CFGLSurfaceView(this)
+        setContentView(CFGLView)
 
-        var rl = RelativeLayout(this)
-        rl.addView(CFGLView)
+        var gi = RelativeLayout(this)
+        val inflater: LayoutInflater = this.layoutInflater
+        var view = inflater.inflate(R.layout.opengl_main, null)
+        gi.addView(view)
+        addContentView(gi, ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT))
 
-        val lp: RelativeLayout.LayoutParams =
-            RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        lp.addRule(RelativeLayout.ALIGN_TOP)
-        tv = TextView(this)
-        tv.setTextColor(Color.WHITE)
-        tv.layoutParams = lp
-        tv.textSize = 36f
-        tv.text = " Score: 0"
-        tv.setBackgroundColor(0x0060ff00)
-        rl.addView(tv)
-
-        setContentView(rl)
+        supportFragmentManager.beginTransaction().setReorderingAllowed(true).add(R.id.opengl_main,OpenGLMainFragment(),"MainFragment").commit()
 
 
-        var menu = Button(this)
-        menu.text = "Menu"
-        menu.setOnClickListener {
-            CFGLPhysicsController.stop()
-            val intent = Intent(this, MainMenu::class.java)
-            startActivity(intent)
-        }
-        menu.textSize = 28f
 
-        val lp2: RelativeLayout.LayoutParams =
-            RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        lp2.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
-        menu.layoutParams = lp2
-        rl.addView(menu)
-
-        var zero = Button(this)
-        zero.text = "Zero"
-        zero.setOnClickListener {
-            CFGLPhysicsController.setGyroZero(CFGLPhysicsController.gyroPos.y)
-        }
-        zero.textSize = 28f
-
-        val lp3: RelativeLayout.LayoutParams =
-            RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        lp3.setMargins(0,150,0,0,)
-        lp3.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
-        zero.layoutParams = lp3
-        rl.addView(zero)
 
 
         CFGLGyro = getSystemService(SENSOR_SERVICE) as SensorManager
@@ -88,17 +61,71 @@ class OpenGLActivity: AppCompatActivity() {
 
     fun updateText(inText : String) {
         this.runOnUiThread {
+            val tv = findViewById<TextView>(R.id.score)
             tv.text = inText
         }
     }
 
+    fun togglePause() {
+        if(!paused)
+        {
+            this.runOnUiThread {
+                supportFragmentManager.beginTransaction().setReorderingAllowed(true).add(R.id.opengl_main,OpenGLPauseFragment(),"PauseFragment").commit()
+            }
+        }
+        else {
+            this.runOnUiThread {
+                supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
+                    supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(
+                        it
+                    ).commit()
+                }
+            }
+        }
+
+        paused = !paused
+    }
+
+    fun setPause(on : Boolean) {
+        if(on)
+        {
+            if(!paused)
+            {
+                this.runOnUiThread {
+                    supportFragmentManager.beginTransaction().setReorderingAllowed(true).add(R.id.opengl_main,OpenGLPauseFragment(),"PauseFragment").commit()
+                }
+                paused = true
+            }
+        }
+        else {
+            if(paused)
+            {
+                this.runOnUiThread {
+                    supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
+                        supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(
+                            it
+                        ).commit()
+                    }
+                }
+                paused = false
+            }
+        }
+    }
+
+
     override fun onPause() {
         super.onPause()
-        CFGLView.onPause()
 
         if(running) {
             CFGLPhysicsController.stop()
+            if(!reset)
+            {
+                setPause(true)
+                CFGLEngine.halt = true
+            }
         }
+
+        CFGLView.onPause()
     }
 
     override fun onResume() {
@@ -112,7 +139,12 @@ class OpenGLActivity: AppCompatActivity() {
         )
 
         if(running){
-            CFGLEngine.resetGame()
+            if(reset) {
+                CFGLEngine.resetGame()
+                setPause(false)
+                reset = false
+            }
+
             CFGLPhysicsController.start()
         }
     }

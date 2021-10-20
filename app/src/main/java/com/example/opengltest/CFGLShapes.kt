@@ -70,17 +70,21 @@ class Animation() {
             color = colors[currentFrame]
         }
 
-        framesOnKeyframe++
-        if(framesOnKeyframe == FRAMES_PER_KEYFRAME)
+        if(!CFGLActivity.paused)
         {
-            currentFrame++
-            framesOnKeyframe = 0
+            framesOnKeyframe++
+            if(framesOnKeyframe == FRAMES_PER_KEYFRAME)
+            {
+                currentFrame++
+                framesOnKeyframe = 0
+            }
+
+            if(currentFrame == keyframes.size)
+            {
+                currentFrame = 0
+            }
         }
 
-        if(currentFrame == keyframes.size)
-        {
-            currentFrame = 0
-        }
         return Frame(image, color)
     }
 }
@@ -156,6 +160,8 @@ class Rectangle(var pt1: Vector2, var pt2: Vector2, var pt3: Vector2, var pt4: V
     private var texture = 0
     private var hasTexture = false
 
+    // Lock is used to prevent changing of texture while drawing
+    val animLock = ReentrantLock()
     private lateinit var animation : Animation
     private var hasAnimation = false
 
@@ -168,7 +174,6 @@ class Rectangle(var pt1: Vector2, var pt2: Vector2, var pt3: Vector2, var pt4: V
         animation = animationIn
         hasAnimation = true
     }
-
 
 
     constructor(ptCenter: Vector2, width: Float, height: Float, inColor : Color4) : this(
@@ -244,6 +249,17 @@ class Rectangle(var pt1: Vector2, var pt2: Vector2, var pt3: Vector2, var pt4: V
         hasAnimation = true
     }
 
+    fun setAnimation(anim : Animation) {
+        animLock.withLock {
+            animation = anim
+            hasAnimation = true
+        }
+    }
+
+    fun getAnimation() : Animation {
+        return animation
+    }
+
     override fun wind() : FloatArray {
         return floatArrayOf(
             pt1.x, pt1.y, 0.0f,
@@ -258,7 +274,9 @@ class Rectangle(var pt1: Vector2, var pt2: Vector2, var pt3: Vector2, var pt4: V
 
     override fun draw() {
         if(hasAnimation) {
-            CFGLRenderer.texDrawObj(this, animation.getFrame())
+            animLock.withLock {
+                CFGLRenderer.texDrawObj(this, animation.getFrame())
+            }
         }
         else if(hasTexture) {
             CFGLRenderer.texDrawObj(this, Frame(texture, this.color))

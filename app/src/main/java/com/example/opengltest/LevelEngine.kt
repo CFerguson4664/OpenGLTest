@@ -9,7 +9,6 @@ class ObstacleLayout(var id : Int, var p1 : Boolean, var p2 : Boolean, var p3 : 
 class LevelEngine {
     companion object {
         var lastObstacle = 2;
-        var txt = loadTexture(R.drawable.whitesquare)
 
         var textures : List<Int> = listOf(
             loadTexture(R.drawable.asteroid_small),

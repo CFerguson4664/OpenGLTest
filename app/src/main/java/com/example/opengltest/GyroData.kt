@@ -8,9 +8,11 @@ import android.util.Log
 import kotlin.math.abs
 
 class GyroData(var CBack: (xValue: Float, yValue: Float) -> Unit) : SensorEventListener {
-    var zeroPoint = 0f
-    var maxVal = -9.8f
-    var lastUpDownVal : Float = 0f
+    companion object {
+        var zeroPointVert = 0f
+        var maxVal = -9.8f
+        var lastUpDownVal : Float = 0f
+    }
 
     init {
         CFGLGyro.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.also {
@@ -22,10 +24,10 @@ class GyroData(var CBack: (xValue: Float, yValue: Float) -> Unit) : SensorEventL
         if(p0?.sensor?.type == Sensor.TYPE_ACCELEROMETER){
             val sides  = p0.values[0] * -1
             val upDown = p0.values[1] * -1
-            lastUpDownVal = upDown
-            var upDownMod = upDown - zeroPoint
 
-            val scalar = abs(zeroPoint / (maxVal - zeroPoint)) + 1
+            lastUpDownVal = upDown
+            var upDownMod = upDown - zeroPointVert
+            val scalar = abs(zeroPointVert / (maxVal - zeroPointVert)) + 1
             if(upDownMod < 0) {
                 upDownMod *= scalar
             }
@@ -42,8 +44,6 @@ class GyroData(var CBack: (xValue: Float, yValue: Float) -> Unit) : SensorEventL
     }
 
     fun setZero() {
-        zeroPoint = lastUpDownVal
-
-        Log.d("Zero", lastUpDownVal.toString())
+        zeroPointVert = lastUpDownVal
     }
 }

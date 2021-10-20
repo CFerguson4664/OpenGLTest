@@ -11,66 +11,40 @@ tools:context=".MainMenu">
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <Button
-    android:id="@+id/button_start_game"
-    android:layout_width="114dp"
-    android:layout_height="60dp"
-    android:text="START"
-    android:backgroundTint="#1FA401"
-    android:visibility="visible"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintHorizontal_bias="0.198"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintVertical_bias="0.499"
-    app:strokeColor="@color/black" />
+        android:id="@+id/button_start_game"
+        android:layout_width="114dp"
+        android:layout_height="60dp"
+        android:text="Start"
+        android:backgroundTint="#1FA401"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.198"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.499"
+        app:strokeColor="@color/black" />
 
-<Button
-    android:id="@+id/button_quit_game"
-    android:layout_width="114dp"
-    android:layout_height="60dp"
-    android:text="Quit"
-    android:backgroundTint="#A30000"
-    android:visibility="visible"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintHorizontal_bias="0.787"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintVertical_bias="0.499" />
+    <Button
+        android:id="@+id/button_quit_game"
+        android:layout_width="114dp"
+        android:layout_height="60dp"
+        android:text="Quit"
+        android:backgroundTint="#A30000"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.787"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.499" />
 
-<Switch
-    android:id="@+id/switch_sound"
-    android:layout_width="134dp"
-    android:layout_height="46dp"
-    android:background="#636363"
-    android:backgroundTintMode="src_over"
-    android:text="   SOUND"
-    android:visibility="visible"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintHorizontal_bias="0.498"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintVertical_bias="0.613" />
-
-<Switch
-    android:id="@+id/switch_vibration"
-    android:layout_width="134dp"
-    android:layout_height="46dp"
-    android:background="#636363"
-    android:text="   VIBRATION"
-    android:visibility="visible"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintHorizontal_bias="0.498"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintVertical_bias="0.68" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
