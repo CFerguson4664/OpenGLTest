@@ -50,6 +50,4 @@ class MainMenu : AppCompatActivity() {
             exitProcess(0)
         }
     }
-
-
 }

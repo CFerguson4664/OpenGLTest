@@ -30,12 +30,7 @@ class OpenGLActivity: AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d("OnCreate","OnCreate Called")
-
         super.onCreate(savedInstanceState)
-
-
-
 
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
@@ -48,79 +43,20 @@ class OpenGLActivity: AppCompatActivity() {
         gi.addView(view)
         addContentView(gi, ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT))
 
-        supportFragmentManager.beginTransaction().setReorderingAllowed(true).add(R.id.opengl_main,OpenGLMainFragment(),"MainFragment").commit()
-
-
-
-
-
         CFGLGyro = getSystemService(SENSOR_SERVICE) as SensorManager
 
         CFGLActivity = this
     }
 
-    fun updateText(inText : String) {
-        this.runOnUiThread {
-            val tv = findViewById<TextView>(R.id.score)
-            tv.text = inText
-        }
-    }
-
-    fun togglePause() {
-        if(!paused)
-        {
-            this.runOnUiThread {
-                supportFragmentManager.beginTransaction().setReorderingAllowed(true).add(R.id.opengl_main,OpenGLPauseFragment(),"PauseFragment").commit()
-            }
-        }
-        else {
-            this.runOnUiThread {
-                supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
-                    supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(
-                        it
-                    ).commit()
-                }
-            }
-        }
-
-        paused = !paused
-    }
-
-    fun setPause(on : Boolean) {
-        if(on)
-        {
-            if(!paused)
-            {
-                this.runOnUiThread {
-                    supportFragmentManager.beginTransaction().setReorderingAllowed(true).add(R.id.opengl_main,OpenGLPauseFragment(),"PauseFragment").commit()
-                }
-                paused = true
-            }
-        }
-        else {
-            if(paused)
-            {
-                this.runOnUiThread {
-                    supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
-                        supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(
-                            it
-                        ).commit()
-                    }
-                }
-                paused = false
-            }
-        }
-    }
-
-
     override fun onPause() {
         super.onPause()
+        CFGLEngine.onPause()
 
         if(running) {
             CFGLPhysicsController.stop()
             if(!reset)
             {
-                setPause(true)
+                OpenGLPauseFragment.show()
                 CFGLEngine.halt = true
             }
         }
@@ -129,8 +65,8 @@ class OpenGLActivity: AppCompatActivity() {
     }
 
     override fun onResume() {
-        Log.d("OnCreate","GLView Resumed")
         super.onResume()
+        CFGLEngine.onResume()
         CFGLView.onResume()
 
         window.decorView.setSystemUiVisibility(
@@ -141,7 +77,7 @@ class OpenGLActivity: AppCompatActivity() {
         if(running){
             if(reset) {
                 CFGLEngine.resetGame()
-                setPause(false)
+                OpenGLPauseFragment.hide()
                 reset = false
             }
 

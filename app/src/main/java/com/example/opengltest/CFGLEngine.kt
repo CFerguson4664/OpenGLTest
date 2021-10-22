@@ -1,8 +1,6 @@
 package com.example.opengltest
 
-import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.pow
@@ -28,7 +26,6 @@ class CFGLEngine {
         lateinit var center : Animation
 
         fun start() {
-            Log.d("OnCreate","Engine Started")
             CFGLPhysicsController.useGyro()
 
             val bg1 = Vector2(-1f,-3f)
@@ -92,6 +89,8 @@ class CFGLEngine {
             obstacles.add(obstacle)
             CFGLCanvas.add(obstacle)
             lastObstacle = obstacle
+
+            OpenGLMainFragment.show()
         }
 
         fun update(deltaTime : Float, gyroData : Vector2) {
@@ -177,13 +176,14 @@ class CFGLEngine {
                             {
                                 halt = true
                                 died = true
+                                OpenGLDeathFragment.show()
                             }
                         }
                     }
                 }
 
                 score += deltaTime * 10
-                CFGLActivity.updateText(" Score: " + score.toInt())
+                OpenGLMainFragment.updateScore(" Score: " + score.toInt())
 
                 while(!obToRemove.isEmpty())
                 {
@@ -218,10 +218,13 @@ class CFGLEngine {
                         if(died)
                         {
                             resetGame()
+                            OpenGLDeathFragment.hide()
                         }
                         else {
-                            halt = !halt
-                            CFGLActivity.togglePause()
+                            if(CFGLActivity.paused) {
+                                halt = false
+                                OpenGLPauseFragment.hide()
+                            }
                         }
                     }
 
@@ -234,6 +237,14 @@ class CFGLEngine {
                     }
                 }
             }
+        }
+
+        fun onPause() {
+
+        }
+
+        fun onResume() {
+
         }
 
         fun resetGame() {

@@ -18,6 +18,19 @@ var CFGLAspect : Float = 0.0f
 var CFGLCanvas : Canvas = Canvas()
 
 
+// This class does most of the fancy OpenGL stuff this application uses
+
+// Is is a hybrid of more random websites and stack overflow posts than it would be possible to put
+// here so I'll just try to put the ones which I think would be most helpful.
+
+// This is a good intro the the basics of OpenGL ES. It's the source for most of what is used here
+// This is also where the base for my shaders came from
+// https://www.learnopengles.com/android-lesson-four-introducing-basic-texturing/
+
+// The official android guide for OpenGL ES is also fairly helpful
+// Details on drawing graphics with OpenGL ES can be found here
+// https://developer.android.com/training/graphics/opengl
+
 class CFGLRenderer : GLSurfaceView.Renderer {
     private var engineStarted : Boolean = false
 
@@ -54,21 +67,27 @@ class CFGLRenderer : GLSurfaceView.Renderer {
         private const val COORDS_PER_VERTEX = 3
         private const val TEXT_COORD_SIZE = 2
 
+        // This function handles drawing a shape without a texture to the OpenGL View
         fun drawObj(shape: Shape) {
             val mProgram = ShapeShader.getProgram()
             var mPositionHandle: Int = 0
             var mColorHandle : Int = 0
             lateinit var vertexCoords : FloatArray
 
+            // Get the vertex coords for the shape
             shape.lock.withLock {
                  vertexCoords = shape.wind()
             }
 
+            // Find the number of vertices and the number of bytes per vertex
             val vertexCount: Int = vertexCoords.size / COORDS_PER_VERTEX
-            val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
+            val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per coord
 
+            // If the shape hasn't moved since the last time it was drawn we do not need to redo
+            // the vertices
             if(!shape.vertexBufferValid)
             {
+                // Generate the vertex buffer
                 shape.vertexBuffer =
                         // (# of coordinate values * 4 bytes per float)
                     ByteBuffer.allocateDirect(vertexCoords.size * 4).run {
@@ -85,6 +104,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             // Add program to OpenGL ES environment
             GLES20.glUseProgram(mProgram)
 
+            // Load the vertex buffer into OpenGL ES
             mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition")
             GLES20.glEnableVertexAttribArray(mPositionHandle)
             GLES20.glVertexAttribPointer(
@@ -98,6 +118,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
 
             // Get handle to shader's vColor member
             mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor")
+
             // Set color for drawing the shape
             GLES20.glUniform4fv(mColorHandle, 1, shape.color.getColor(), 0)
 
@@ -108,7 +129,15 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             GLES20.glDisableVertexAttribArray(mPositionHandle)
         }
 
+
+
+        // This function handles drawing a shape with a texture to the OpenGL View
         fun texDrawObj(shape: Shape, frame : Frame) {
+
+            // ************************* Warning *************************** //
+            // In its current state this function can only handle rectangles //
+            // ************************* Warning *************************** //
+
             val mProgram = TexShapeShader.getProgram()
             var mPositionHandle: Int = 0
             var mTextureCoordinateHandle: Int = 0
@@ -117,15 +146,23 @@ class CFGLRenderer : GLSurfaceView.Renderer {
 
             lateinit var vertexCoords : FloatArray
 
+            // Get the vertex coords for the shape
             shape.lock.withLock {
                 vertexCoords = shape.wind()
             }
 
+            // Find the number of vertices and the number of bytes per vertex
             val vertexCount: Int = vertexCoords.size / COORDS_PER_VERTEX
             val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
+            // If the texture of the shape hasn't changes we do not need to redo the texture buffer
             if(!shape.textureBufferValid)
             {
+                // Generate the texture buffer
+
+                // This used to use fancy logic to handle shapes other than rectangles
+                // but the logic wasn't working, so until I have time to fix it this is hardcoded
+                // to do a rectangle
                 val coords : MutableList<Float> = emptyList<Float>().toMutableList()
                 coords.add(0f)
                 coords.add(1f)
@@ -154,8 +191,11 @@ class CFGLRenderer : GLSurfaceView.Renderer {
                 shape.textureBufferValid = true
             }
 
+            // If the shape hasn't moved since the last time it was drawn we do not need to redo
+            // the vertices
             if(!shape.vertexBufferValid)
             {
+                // Generate the vertex buffer
                 shape.vertexBuffer =
                     // (# of coordinate values * 4 bytes per float)
                     ByteBuffer.allocateDirect(vertexCoords.size * 4).run {
@@ -172,6 +212,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             // Add program to OpenGL ES environment
             GLES20.glUseProgram(mProgram)
 
+            // Load the vertex buffer into OpenGL ES
             mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition")
             GLES20.glEnableVertexAttribArray(mPositionHandle)
             GLES20.glVertexAttribPointer(
@@ -183,6 +224,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
                 shape.vertexBuffer
             )
 
+            // Load the texture buffer into OpenGL ES
             mTextureCoordinateHandle = GLES20.glGetAttribLocation(mProgram, "a_TexCoordinate")
             GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle)
             GLES20.glVertexAttribPointer(
@@ -209,6 +251,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
             // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
             GLES20.glUniform1i(mTextureUniformHandle, 0)
 
+            // Allow clear parts of the images to be drawn clear
             GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
             GLES20.glEnable(GLES20.GL_BLEND)
 
@@ -222,6 +265,7 @@ class CFGLRenderer : GLSurfaceView.Renderer {
     }
 }
 
+// This class creates the OpenGL shader program used to draw non-textured objects
 class ShapeShader {
     companion object {
         private var program : Int = 0
@@ -240,6 +284,7 @@ class ShapeShader {
                     "  gl_FragColor = vColor;" +
                     "}"
 
+        // This function loads the OpenGL shader code into OpenGL ES and returns its ID
         fun getProgram() : Int {
             if(!programSet) {
                 val vertexShader: Int = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
@@ -265,6 +310,7 @@ class ShapeShader {
     }
 }
 
+// This class creates the OpenGL shader program used to draw textured objects
 class TexShapeShader {
     companion object {
         private var program : Int = 0
@@ -288,6 +334,7 @@ class TexShapeShader {
                     "  gl_FragColor = (vColor * texture2D(u_Texture, v_TexCoordinate));" +
                     "}"
 
+        // This function loads the OpenGL shader code into OpenGL ES and returns its ID
         fun getProgram() : Int {
             if(!programSet) {
                 val vertexShader: Int = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
@@ -314,6 +361,8 @@ class TexShapeShader {
 }
 
 // Utility function to load shaders
+// This function was copied from here :
+// https://www.learnopengles.com/android-lesson-four-introducing-basic-texturing/
 fun loadShader(type: Int, shaderCode: String): Int {
 
     // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
@@ -324,11 +373,15 @@ fun loadShader(type: Int, shaderCode: String): Int {
         GLES20.glShaderSource(shader, shaderCode)
         GLES20.glCompileShader(shader)
 
-        Log.d("Shader",type.toString() + " " + GLES20.glGetShaderInfoLog(shader))
+        // This line is used to print out the compile log for the shader
+        // It very useful in figuring out why a shader isn't compiling
+        // Log.d("Shader",type.toString() + " " + GLES20.glGetShaderInfoLog(shader))
     }
 }
 
 // Utility function to load textures
+// This function was copied from here :
+// https://www.learnopengles.com/android-lesson-four-introducing-basic-texturing/
 fun loadTexture(resourceId: Int) : Int{
     val context = CFGLView.context
 
