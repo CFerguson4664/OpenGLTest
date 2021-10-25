@@ -1,11 +1,29 @@
 package com.example.opengltest
 
+import android.hardware.SensorManager
+
+class CFGL {
+    companion object {
+        var Width : Int = 0
+        var Height : Int = 0
+        var Aspect : Float = 0.0f
+        var Canvas = Canvas()
+
+        lateinit var View : CFGLSurfaceView
+        lateinit var Gyro : SensorManager
+        lateinit var Activity : OpenGLActivity
+    }
+
+}
+
+
+
 // Can be used to convert the coordinates of a touch input to coordinate that match
 // the graphics engine
 fun screenToGraphicsCords(x: Float, y: Float): Vector2 {
     return Vector2(
-        ((x - (CFGLWidth / 2f)) / CFGLWidth) * 2,
-        ((y - (CFGLHeight / 2f)) / -CFGLHeight) * 2
+        ((x - (CFGL.Width / 2f)) / CFGL.Width) * 2,
+        ((y - (CFGL.Height / 2f)) / -CFGL.Height) * 2
     )
 }
 
@@ -14,7 +32,7 @@ class Vector2(var x: Float, var y: Float) {
     // Used to modify the y value of the Vector2 so that equivalent values
     // will appear the same size when displayed
     fun correctAspect() : Vector2 {
-        y *= CFGLAspect
+        y *= CFGL.Aspect
         return this
     }
 }

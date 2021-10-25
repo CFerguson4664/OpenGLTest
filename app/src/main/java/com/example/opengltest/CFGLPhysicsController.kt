@@ -116,12 +116,14 @@ class CFGLPhysicsController : ViewModel() {
                     if (dt < FRAME_TIME) {
                         delay(FRAME_TIME - dt)
                     }
-                    startTime = endTime
+                    val finalTime = System.currentTimeMillis()
+                    val deltaTime = finalTime - startTime
+                    startTime = finalTime
 
                     // If the physics engine is not paused call CFGLEngine.Update()
                     if(!isPaused()) {
                         gyroLock.withLock {
-                            CFGLEngine.update(dt / 1000f, gyroPos)
+                            CFGLEngine.update(deltaTime / 1000f, gyroPos)
                         }
                     }
                 }

@@ -12,15 +12,10 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.concurrent.withLock
 
-var CFGLWidth : Int = 0
-var CFGLHeight : Int = 0
-var CFGLAspect : Float = 0.0f
-var CFGLCanvas : Canvas = Canvas()
-
 
 // This class does most of the fancy OpenGL stuff this application uses
 
-// Is is a hybrid of more random websites and stack overflow posts than it would be possible to put
+// It is a hybrid of more random websites and stack overflow posts than it would be possible to put
 // here so I'll just try to put the ones which I think would be most helpful.
 
 // This is a good intro the the basics of OpenGL ES. It's the source for most of what is used here
@@ -39,27 +34,33 @@ class CFGLRenderer : GLSurfaceView.Renderer {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
     }
 
+    // This function will automatically be called at the framerate of the device because glClear
+    // will block until there is a frame to draw
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
-        CFGLCanvas.modify()
-        CFGLCanvas.draw()
+        CFGL.Canvas.modify()
+        CFGL.Canvas.draw()
     }
 
+    // This function is called when the size of the opengl surface changes, and at the start
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
 
-        CFGLWidth = width
-        CFGLHeight = height
-        CFGLAspect = width.toFloat() / height.toFloat()
+        CFGL.Width = width
+        CFGL.Height = height
+        CFGL.Aspect = width.toFloat() / height.toFloat()
 
+        // Make sure the engine does not start twice
         if(!engineStarted)
-        {
+        {6
             CFGLEngine.start()
             engineStarted = true
             OpenGLActivity.running = true
 
             CFGLPhysicsController.start()
+            CFGLPhysicsController.pause()
+            OpenGLPauseFragment.show()
         }
     }
 
@@ -383,7 +384,7 @@ fun loadShader(type: Int, shaderCode: String): Int {
 // This function was copied from here :
 // https://www.learnopengles.com/android-lesson-four-introducing-basic-texturing/
 fun loadTexture(resourceId: Int) : Int{
-    val context = CFGLView.context
+    val context = CFGL.View.context
 
     val mTextureHandle : IntArray = arrayOf<Int>(0).toIntArray()
 

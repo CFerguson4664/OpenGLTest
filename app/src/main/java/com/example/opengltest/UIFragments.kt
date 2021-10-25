@@ -16,38 +16,44 @@ class OpenGLMainFragment : Fragment(R.layout.opengl_menu) {
 
 
         // Setup onClick handlers
-        val menuButton = CFGLActivity.findViewById<Button>(R.id.menu)
+        val menuButton = CFGL.Activity.findViewById<Button>(R.id.menu)
         menuButton.setOnClickListener {
-            CFGLActivity.reset = true
-            val intent = Intent(CFGLActivity, MainMenu::class.java)
+            CFGLEngine.resetGame()
+            CFGLPhysicsController.resume()
+
+            val intent = Intent(CFGL.Activity, MainMenu::class.java)
             startActivity(intent)
+
+
+            OpenGLPauseFragment.hide()
+            OpenGLDeathFragment.hide()
         }
 
-        val pauseButton = CFGLActivity.findViewById<Button>(R.id.pause)
+        val pauseButton = CFGL.Activity.findViewById<Button>(R.id.pause)
         pauseButton.setOnClickListener {
-            CFGLEngine.halt = true
-            CFGLActivity.setPause(true)
+            CFGLPhysicsController.pause()
+            OpenGLPauseFragment.show()
         }
     }
 
     companion object {
         // Updates the score displayed on the UI
         fun updateScore(inText : String) {
-            CFGLActivity.runOnUiThread {
-                val tv = CFGLActivity.findViewById<TextView>(R.id.score)
+            CFGL.Activity.runOnUiThread {
+                val tv = CFGL.Activity.findViewById<TextView>(R.id.score)
                 tv.text = inText
             }
         }
 
         // Shows this UI fragment
         fun show() {
-            CFGLActivity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLMainFragment(),"MainFragment").commit()
+            CFGL.Activity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLMainFragment(),"MainFragment").commit()
         }
 
         // Hides this UI fragment
         fun hide() {
-            CFGLActivity.supportFragmentManager.findFragmentByTag("MainFragment")?.let {
-                CFGLActivity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
+            CFGL.Activity.supportFragmentManager.findFragmentByTag("MainFragment")?.let {
+                CFGL.Activity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
             }
         }
     }
@@ -62,8 +68,8 @@ class OpenGLSettingsFragment : Fragment(R.layout.opengl_settings) {
         super.onViewCreated(view, savedInstanceState)
 
         // Get the text objects in the menu
-        vertText = CFGLActivity.findViewById<TextView>(R.id.tvgvv)
-        horizText = CFGLActivity.findViewById<TextView>(R.id.tvghv)
+        vertText = CFGL.Activity.findViewById<TextView>(R.id.tvgvv)
+        horizText = CFGL.Activity.findViewById<TextView>(R.id.tvghv)
 
         // Create a GyroData Object to access Gyroscope Data
         // Callback function is passed as a parameter
@@ -71,13 +77,13 @@ class OpenGLSettingsFragment : Fragment(R.layout.opengl_settings) {
 
 
         // Setup onClick handlers
-        val doneButton = CFGLActivity.findViewById<Button>(R.id.done)
+        val doneButton = CFGL.Activity.findViewById<Button>(R.id.done)
         doneButton.setOnClickListener {
             hide()
             CFGLEngine.disableTap = false
         }
 
-        val zeroButton = CFGLActivity.findViewById<Button>(R.id.zeroVert)
+        val zeroButton = CFGL.Activity.findViewById<Button>(R.id.zeroVert)
         zeroButton.setOnClickListener {
             gyro.setZero()
         }
@@ -87,7 +93,7 @@ class OpenGLSettingsFragment : Fragment(R.layout.opengl_settings) {
     fun displayData(x : Float, y : Float) {
 
         // This has to be run on the UI thread since it directly modifies the UI
-        CFGLActivity.runOnUiThread {
+        CFGL.Activity.runOnUiThread {
             horizText.text = String.format("%.3f",x)
             vertText.text = String.format("%.3f",y)
         }
@@ -97,13 +103,13 @@ class OpenGLSettingsFragment : Fragment(R.layout.opengl_settings) {
 
         // Shows this UI fragment
         fun show() {
-            CFGLActivity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLPauseFragment(),"PauseFragment").commit()
+            CFGL.Activity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLSettingsFragment(),"SettingsFragment").commit()
         }
 
         // Hides this UI fragment
         fun hide() {
-            CFGLActivity.supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
-                CFGLActivity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
+            CFGL.Activity.supportFragmentManager.findFragmentByTag("SettingsFragment")?.let {
+                CFGL.Activity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
             }
         }
     }
@@ -114,9 +120,9 @@ class OpenGLPauseFragment : Fragment(R.layout.opengl_pause) {
         super.onViewCreated(view, savedInstanceState)
 
         // Setup onClick handlers
-        val settingsButton = CFGLActivity.findViewById<Button>(R.id.pauseSettings)
+        val settingsButton = CFGL.Activity.findViewById<Button>(R.id.pauseSettings)
         settingsButton.setOnClickListener {
-            CFGLActivity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLSettingsFragment(),"SettingsFragment").commit()
+            OpenGLSettingsFragment.show()
             CFGLEngine.disableTap = true
         }
     }
@@ -125,13 +131,13 @@ class OpenGLPauseFragment : Fragment(R.layout.opengl_pause) {
 
         // Shows this UI fragment
         fun show() {
-            CFGLActivity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLPauseFragment(),"PauseFragment").commit()
+            CFGL.Activity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLPauseFragment(),"PauseFragment").commit()
         }
 
         // Hides this UI fragment
         fun hide() {
-            CFGLActivity.supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
-                CFGLActivity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
+            CFGL.Activity.supportFragmentManager.findFragmentByTag("PauseFragment")?.let {
+                CFGL.Activity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
             }
         }
     }
@@ -142,9 +148,9 @@ class OpenGLDeathFragment : Fragment(R.layout.opengl_death) {
         super.onViewCreated(view, savedInstanceState)
 
         // Setup onClick handlers
-        val settingsButton = CFGLActivity.findViewById<Button>(R.id.pauseSettings)
+        val settingsButton = CFGL.Activity.findViewById<Button>(R.id.pauseSettings)
         settingsButton.setOnClickListener {
-            CFGLActivity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLSettingsFragment(),"SettingsFragment").commit()
+            CFGL.Activity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLSettingsFragment(),"SettingsFragment").commit()
             CFGLEngine.disableTap = true
         }
     }
@@ -153,13 +159,13 @@ class OpenGLDeathFragment : Fragment(R.layout.opengl_death) {
 
         // Shows this UI fragment
         fun show() {
-            CFGLActivity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLDeathFragment(),"DeathFragment").commit()
+            CFGL.Activity.supportFragmentManager.beginTransaction().add(R.id.opengl_main, OpenGLDeathFragment(),"DeathFragment").commit()
         }
 
         // Hides this UI fragment
         fun hide() {
-            CFGLActivity.supportFragmentManager.findFragmentByTag("DeathFragment")?.let {
-                CFGLActivity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
+            CFGL.Activity.supportFragmentManager.findFragmentByTag("DeathFragment")?.let {
+                CFGL.Activity.supportFragmentManager.beginTransaction().setReorderingAllowed(true).remove(it).commit()
             }
         }
     }
